@@ -50,3 +50,4 @@ board = Board()
 deck.deal_cards(deck, players)
 board.show()
 board.place_cards(players)
+
