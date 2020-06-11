@@ -1,2 +1,4 @@
 # Take-5-Simulation
-#this is just a test to see what happens
+#This is my first project
+
+# Eventually this will simulate the card game Take 5
