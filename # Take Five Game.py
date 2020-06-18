@@ -26,11 +26,11 @@ class Player():
 class Board():
     def __init__(self):
         self.turn_rec = {}      # Dictionary log of {turn number : {player : {card_key:card_value}}, ...}
-        self.board = {1:[], 2:[], 3:[], 4:[]}
+        self.board = {1:[0], 2:[0], 3:[0], 4:[0]}
     def show(self):
         for row in self.board.values():
             print(row)
-    def place_cards(self, players): 
+    def place_cards(self, players,board): 
         self.turn_rec[len(self.turn_rec.items())+1] = {}
         for pl in players.items():                                                  # cycle through players and add choices to the above line as key pairs
             print("\n Player #{}'s hand = {}" .format(pl[0], list(pl[1].hand)))
@@ -39,12 +39,28 @@ class Board():
             del pl[1].hand[c_card_indx]
         print(self.turn_rec[len(self.turn_rec.items())])
         staged_cards = [sc[0] for sc in sorted([list(c.items())[0:1] for c in [s_c for s_c in [p_c[1] for p_c in dict.items(self.turn_rec[len(self.turn_rec.items())])]]])]       #sorted list of chosen cards by key as tuples [(k:v), ...]
+        empty_row = []
+        addon_row = []
+        take_row = []
         for card in staged_cards:
-            if 0 == {len(self.board[1]), len(self.board[2]), len(self.board[3]), len(self.board[4])}:
-                print('empty row!')
+            for row in self.board.items():
+                if len(row) == 0:
+                    e_row.append(row)
+                if card[0] > row[1][-1] and row[1][-1] != 0:
+                    addon_row.append(row)
+                if card[0] < row[1][-1]:
+                    take_row.append(row)
+            if len(empty_row) > 0:
+                if input('Place the card in an empty row? (y/n)') == 'y':
+                        #list off empty rowa to put cards in 
+                        row[1].append(card)
+                        print(self.board)
+                        break
+                    else:
+                        break
+                elif 
             ch_row = int(input('Enter row number for {} to be placed' .format(card)))
-            
-
+    
 class Monitor():
     def __init__(self):
         self.round_count = 0
@@ -56,6 +72,6 @@ board = Board()
 deck.deal_cards(deck, players)
 board.show()
 while len(board.turn_rec) < 10:
-    board.place_cards(players)
+    board.place_cards(players, board)
     board.show()
     continue
