@@ -20,75 +20,94 @@ class Deck():
 class Player():
     def __init__(self):
         self.hand = []
-        self.points = {}            # {Round number : cards}
+        self.points = {}            # {Round number : cards, ...}
         self.rounds_won = 0
         self.games_won = 0
     def add_points(self, round_end_points):
         self.points += round_end_points
+    def ret_scores(self):   # sum of score from self.points
+        point_total = 0
+        for rounds in self.points.items():
+            for cards in rounds[1]:
+                point_total += cards[1]
+        return point_total
 
 class Board():
     def __init__(self):
-        self.turn_rec = {}      # Dictionary log of {turn number : {player : {card_key:card_value}}, ...}
+        self.turn_rec = {}      # Dictionary log of {turn number : {player : (card_num, card_val)}, ...}
         self.board = {1:[], 2:[], 3:[], 4:[]}
     def show(self):
         print('\n Current game board ')
-        for row in self.board.values(): print(row)
+        for row, spaces in sorted(self.board.items()): print(row, spaces)
         print('\n')
-    def place_cards(self, players,board): 
-        self.turn_rec[len(self.turn_rec.items())+1] = {}
-        for pl in players.items():                                                  # iterate players and add choices to the above line as key pairs
+    def place_cards(self, players): 
+        self.turn_rec[len(self.turn_rec.items())+1] = {}                            # every turn adds new turn entry into self.turn_rec
+        for pl in players.items():                                                  # iterate players and add chosen cards to the above line as key pairs
             print("\n Player #{}'s hand = {}" .format(pl[0], list(pl[1].hand)))
             c_card_indx = int(input('Enter the index location of the card to play \n'))
-            self.turn_rec[len(self.turn_rec.items())][pl[0]] = {pl[1].hand[c_card_indx][0]: pl[1].hand[c_card_indx][1]}
+            self.turn_rec[len(self.turn_rec.items())][pl[0]] = (pl[1].hand[c_card_indx][0], pl[1].hand[c_card_indx][1])
             del pl[1].hand[c_card_indx]
-        staged_cards = [sc[0] for sc in sorted([list(c.items())[0:1] for c in [s_c for s_c in [p_c[1] for p_c in dict.items(self.turn_rec[len(self.turn_rec.items())])]]])]       #list sorted by key of chosen cards as tuples [(k:v), ...]
-        print('\n{}' .format(staged_cards))
-        empty_row = []
-        addon_row = []
-        take_row = []
+        staged_cards = sorted(s_c for s_c in [p_c[1] for p_c in dict.items(self.turn_rec[len(self.turn_rec.items())])]) #list sorted by key of chosen cards as tuples [(card_num, card_val), ...]
+        print('\n{} staged cards' .format(staged_cards))
+        print('\n{} turn_rec ' .format(self.turn_rec))
         for card in staged_cards:
-            empty_row.clear()
-            addon_row.clear()
-            take_row.clear()
-            for row in self.board.items():
-                if len(row[1]) == 0:
-                    empty_row.append(row)
-                if row[1]:
-                    if card[0] > row[1][-1][0] and row[1][-1] != 0:
-                        addon_row.append(row)
-                    if card[0] < row[1][-1][0]:
-                        take_row.append(row)
-            if take_row:
-                if input('Would you like to take a row?') == 'y':
-                    for t_c in self.board[input('Enter row number to take from {}?' .format(take_row))].items():
-                        print(t_c)
-                        empty_row.clear()
-                        addon_row.clear()
-                        take_row.clear()
-                else:
-                    pass
-            elif addon_row:
-                print('addon chosen')
-                for lead_card in self.board.items()[-1]:
-                    print(lead_card)
-            if empty_row or addon_row or take_row:
-                empty_row.clear()
-                addon_row.clear()
-                take_row.clear()
-                continue 
-    
+            target_row = (0,[0]) # (board row number, [list of cards in row])
+            for rowlead_card in self.board.items():             # Searches for appropriate row to place card
+                print('\n{} rowlead_card[1][-1]' .format(rowlead_card[1][-1]))
+                print('\n{} target_row[1][-1]' .format(target_row[1][-1]))
+                print('\n{} card[0]' .format(card[0]))
+                if rowlead_card[1][-1][0] > target_row[0] and card[0] > rowlead_card[1][-1][0]:
+                    if target_row == (0,[0]):
+                        target_row = rowlead_card
+                    if abs(target_row[1][-1][0] - rowlead_card[1][-1][0]) > abs(card[0] - rowlead_card[1][-1][0]):
+                        target_row = rowlead_card
+            if target_row == (0,[0]):                                # if no appropriate row, choose to take a row and add it to player.points
+                for player_of, pcard in self.turn_rec[len(self.turn_rec.items())].items():
+                    if card == pcard:
+                        print('\n Current game board ')
+                        for row, spaces in sorted(self.board.items()): print(row, spaces)
+                        print('\n')
+                        row_to_take = int(input('Player {} Enter the row number to take ' .format(player_of)))
+                        players[player_of].points[len(self.turn_rec.items())] = self.board.pop(row_to_take)
+                        self.board[row_to_take] = [card]
+                        print(players[player_of].points)
+            else:                                               # if row full add to player.points then place card, if not full just place card 
+                print('\n{} target_row[0]' .format(target_row[0]))
+                if len(self.board[target_row[0]]) == 5:
+                    for player_of1, pcard1 in self.turn_rec[len(self.turn_rec.items())].items():
+                        if card == pcard1:
+                            players[player_of1].points[len(self.turn_rec.items())] = self.board.pop(target_row[0])
+                            self.board[target_row[0]] = []
+                self.board[target_row[0]].append(card)
+    def                         
+
 class Monitor():
     def __init__(self):
-        self.round_count = 0
+        self.game_count = 1
         self.deck_after_round = {}
 
+
 deck = Deck()
-players = {pl: Player() for pl in range(1,int(input('how many people are playing?'))+1)}        #Dictionary of 2 - 10 {player numbers : player objects}
+players = {pl: Player() for pl in range(1,int(input('how many people are playing?'))+1)}        #Dictionary of (2-10)players {player numbers : player objects}
 board = Board()
 deck.deal_cards(deck, players)
 deck.round_start_deal(board)
 board.show()
 while len(board.turn_rec) < 10:
-    board.place_cards(players, board)
+    board.place_cards(players)
     board.show()
     continue
+for player in players.items():
+    if player[1].ret_scores() => 66:
+        for end_player in in players.items():
+            winner = 0
+            if end_player[1].ret_scores() > winner:
+                winner = end_player[1].ret_scores()
+        # add to game count
+        # add to player win count
+        print('player {} wins!!' .format(end_player[0]))
+        break
+if player[1].ret_scores() < 66:
+    print('ok')
+        # add to player round wins
+        #  
